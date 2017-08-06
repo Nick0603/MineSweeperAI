@@ -20,7 +20,7 @@ function getSize(){
 	return [rows,cols];
 }
 
-function getGrid(row,col){
+function getGrid(grids,row,col){
 	if( 1 <= row && row <= rows &&
 		1 <= col && col <= cols ){
 		return grids[(row-1) * rows + (col-1)];
@@ -64,6 +64,13 @@ function initiDate(){
 	[rows,cols] = getSize();
 }
 
+function randomClickGrid(rows,cols){
+	var changeModeBtn = document.getElementById("change-mode")
+	var enabledGrids = document.querySelectorAll(".enabled");
+	if(changeModeBtn.innerText != "Trigger Mode")changeModeBtn.click();
+	var grid = enabledGrids[getRandom(0,enabledGrids.length)];
+	grid.click();
+}
 
 function playGame(){
 
@@ -88,8 +95,7 @@ function playGame(){
 		for(var r = pos["row"]-1 ; r <= pos["row"]+ 1 ; r++){
 			for(var c = pos["col"]-1 ; c <= pos["col"]+ 1 ; c++){
 				if(r == pos["row"] && c == pos["col"])continue;
-
-				targetGrid = getGrid(r,c);
+				targetGrid = getGrid(grids,r,c);
 				if(targetGrid != null){
 					if(hasClass(targetGrid,"flagged")){
 						flaggedCounter ++;
@@ -101,6 +107,7 @@ function playGame(){
 				}
 			}
 		}
+
 		if(mineNumber - flaggedCounter == enableCounter){
 			for(let i =0;i<enablePos.length;i++){
 				if(!isPosInArray(enablePos[i],thisTurnFindMines)){
@@ -116,29 +123,59 @@ function playGame(){
 		}
 	}
 
-
 	var changeModeBtn = document.getElementById("change-mode")
 	if(sweptGrids.length == 0){
-		if(changeModeBtn.innerText != "Trigger Mode")changeModeBtn.click();
-		var grid = getGrid(getRandom(1,rows),getRandom(1,cols))
-		grid.click();
+		randomClickGrid(rows,cols);
 	}else{
 		if(changeModeBtn.innerText != "Flag Mode")changeModeBtn.click();
 		for(var i=0;i<thisTurnFindMines.length;i++){
 			pos = thisTurnFindMines[i];
-			grid = getGrid(pos["r"],pos["c"]);
+			grid = getGrid(grids,pos["r"],pos["c"]);
 			grid.click();
 		}
 		if(changeModeBtn.innerText != "Trigger Mode")changeModeBtn.click();
 		for(var i=0;i<thisTurnFindSecure.length;i++){
 			pos = thisTurnFindSecure[i];
-			grid = getGrid(pos["r"],pos["c"]);
+			grid = getGrid(grids,pos["r"],pos["c"]);
 			grid.click();
 		}
 	}
+	return sweptGrids.length;
+}
+
+
+function work(){
+	thisSweptGrids = playGame();
+	if(lastSweptGrids === thisSweptGrids){
+		cantFoundWorkCounter ++;
+		if(cantFoundWorkCounter >= 3){
+			randomClickGrid();
+		}
+	}else{
+		cantFoundWorkCounter = 0;
+		lastSweptGrids = thisSweptGrids;
+	}
+}
+
+function start(){
+	AIIntervalID = setInterval(work,500);
+}
+function stop(){
+	clearInterval(AIIntervalID);
 }
 
 var rows = null;
 var cols = null;
+var lastSweptGrids = null;
+var cantFoundWorkCounter = 0;
+var AIIntervalID = null;
 initiDate();
-playGame();
+
+
+
+
+
+
+
+
+
