@@ -55,73 +55,90 @@ function isPosInArray(pos,posArray){
 	return false
 }
 
-var grids = document.querySelectorAll(".grid-unit");
+function getRandom(min,max){
+	return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+function initiDate(){
+	var grids = document.querySelectorAll(".grid-unit");
+	[rows,cols] = getSize();
+}
+
+
+function playGame(){
+
+	var grids = document.querySelectorAll(".grid-unit");
+	var sweptGrids = document.querySelectorAll(".swept");
+
+	// item format [  {row: , col:},{row: , col:}]
+	var thisTurnFindMines = [];
+	var thisTurnFindSecure = [];
+
+	for(let item=0;item<sweptGrids.length;item++){
+		var grid = sweptGrids[item];
+		//id == position / position-<row>-<col>
+		var pos = getPosition( grid["id"] );
+		// format : "grid-unit swept swept-num-<number>"
+		var mineNumberClass = grid.className.split(" ")[2]
+		// format : swept-num-<number>"
+		var mineNumber = parseInt(mineNumberClass.split("-")[2])
+		var flaggedCounter = 0;
+		var enableCounter = 0;
+		var enablePos = [];
+		for(var r = pos["row"]-1 ; r <= pos["row"]+ 1 ; r++){
+			for(var c = pos["col"]-1 ; c <= pos["col"]+ 1 ; c++){
+				if(r == pos["row"] && c == pos["col"])continue;
+
+				targetGrid = getGrid(r,c);
+				if(targetGrid != null){
+					if(hasClass(targetGrid,"flagged")){
+						flaggedCounter ++;
+					}
+					if(hasClass(targetGrid,"enabled")){
+						enableCounter++;
+						enablePos.push({r,c});
+					}
+				}
+			}
+		}
+		if(mineNumber - flaggedCounter == enableCounter){
+			for(let i =0;i<enablePos.length;i++){
+				if(!isPosInArray(enablePos[i],thisTurnFindMines)){
+					thisTurnFindMines.push(enablePos[i]);
+				}
+			}
+		}else if(mineNumber - flaggedCounter == 0){
+			for(let i =0;i<enablePos.length;i++){
+				if(!isPosInArray(enablePos[i],thisTurnFindSecure)){
+					thisTurnFindSecure.push(enablePos[i]);
+				}
+			}
+		}
+	}
+
+
+	var changeModeBtn = document.getElementById("change-mode")
+	if(sweptGrids.length == 0){
+		if(changeModeBtn.innerText != "Trigger Mode")changeModeBtn.click();
+		var grid = getGrid(getRandom(1,rows),getRandom(1,cols))
+		grid.click();
+	}else{
+		if(changeModeBtn.innerText != "Flag Mode")changeModeBtn.click();
+		for(var i=0;i<thisTurnFindMines.length;i++){
+			pos = thisTurnFindMines[i];
+			grid = getGrid(pos["r"],pos["c"]);
+			grid.click();
+		}
+		if(changeModeBtn.innerText != "Trigger Mode")changeModeBtn.click();
+		for(var i=0;i<thisTurnFindSecure.length;i++){
+			pos = thisTurnFindSecure[i];
+			grid = getGrid(pos["r"],pos["c"]);
+			grid.click();
+		}
+	}
+}
+
 var rows = null;
 var cols = null;
-[rows,cols] = getSize();
-
-var grids = document.querySelectorAll(".grid-unit");
-var sweptGrids = document.querySelectorAll(".swept");
-
-// item format [  {row: , col:},{row: , col:}]
-var thisTurnFindMines = [];
-var thisTurnFindSecure = [];
-
-
-
-for(let item=0;item<sweptGrids.length;item++){
-	var grid = sweptGrids[item];
-	//id == position / position-<row>-<col>
-	var pos = getPosition( grid["id"] );
-	// format : "grid-unit swept swept-num-<number>"
-	var mineNumberClass = grid.className.split(" ")[2]
-	// format : swept-num-<number>"
-	var mineNumber = parseInt(mineNumberClass.split("-")[2])
-	var flaggedCounter = 0;
-	var enableCounter = 0;
-	var enablePos = [];
-	for(var r = pos["row"]-1 ; r <= pos["row"]+ 1 ; r++){
-		for(var c = pos["col"]-1 ; c <= pos["col"]+ 1 ; c++){
-			if(r == pos["row"] && c == pos["col"])continue;
-
-			targetGrid = getGrid(r,c);
-			if(targetGrid != null){
-				if(hasClass(targetGrid,"flagged")){
-					flaggedCounter ++;
-				}
-				if(hasClass(targetGrid,"enabled")){
-					enableCounter++;
-					enablePos.push({r,c});
-				}
-			}
-		}
-	}
-	if(mineNumber - flaggedCounter == enableCounter){
-		for(let i =0;i<enablePos.length;i++){
-			if(!isPosInArray(enablePos[i],thisTurnFindMines)){
-				thisTurnFindMines.push(enablePos[i]);
-			}
-		}
-	}else if(mineNumber - flaggedCounter == 0){
-		for(let i =0;i<enablePos.length;i++){
-			if(!isPosInArray(enablePos[i],thisTurnFindSecure)){
-				thisTurnFindSecure.push(enablePos[i]);
-			}
-		}
-	}
-}
-
-var changeModeBtn = document.getElementById("change-mode")
-if(changeModeBtn.innerText != "Flag Mode")changeModeBtn.click();
-for(var i=0;i<thisTurnFindMines.length;i++){
-	pos = thisTurnFindMines[i];
-	grid = getGrid(pos["r"],pos["c"]);
-	grid.click();
-}
-if(changeModeBtn.innerText != "Trigger Mode")changeModeBtn.click();
-for(var i=0;i<thisTurnFindSecure.length;i++){
-	pos = thisTurnFindSecure[i];
-	grid = getGrid(pos["r"],pos["c"]);
-	grid.click();
-}
-
+initiDate();
+playGame();
