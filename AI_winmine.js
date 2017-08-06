@@ -143,8 +143,20 @@ function playGame(){
 	return sweptGrids.length;
 }
 
+function isSuccess(){
+	var successDiv = document.getElementById("success-modal");
+	if(successDiv.style.display == "block"){
+		return true;
+	}else{
+		return false;
+	}
+}
 
 function work(){
+	if( isSuccess() ){
+		stop();
+	}
+
 	thisSweptGrids = playGame();
 	if(lastSweptGrids === thisSweptGrids){
 		cantFoundWorkCounter ++;
@@ -157,8 +169,9 @@ function work(){
 	}
 }
 
-function start(){
-	AIIntervalID = setInterval(work,500);
+function start(millis){
+	if(!millis)millis = 500;
+	AIIntervalID = setInterval(work,millis);
 }
 function stop(){
 	clearInterval(AIIntervalID);
