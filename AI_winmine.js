@@ -103,6 +103,7 @@ function playGame(){
 		var flaggedCounter = 0;
 		var enableCounter = 0;
 		var enablePos = [];
+		if(mineNumber == 0)continue;
 		for(var r = pos["row"]-1 ; r <= pos["row"]+ 1 ; r++){
 			for(var c = pos["col"]-1 ; c <= pos["col"]+ 1 ; c++){
 				if(r == pos["row"] && c == pos["col"])continue;
@@ -186,6 +187,7 @@ function start(millis){
 }
 function stop(){
 	clearInterval(AIIntervalID);
+	console.log("stop");
 }
 
 var rows = null;
@@ -194,9 +196,3 @@ var lastSweptGrids = null;
 var cantFoundWorkCounter = 0;
 var AIIntervalID = null;
 initiDate();
-
-
-
-
-
-
