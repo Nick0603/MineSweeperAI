@@ -66,6 +66,8 @@ function isPossibleCombInArray(comb,combArray){
 			if( !isPosInArray(comb.positions[j],commbArrayPositions)){
 				break;
 			}
+		}
+		if(j == comb.positions.length){
 			return true;
 		}
 	}
@@ -136,8 +138,8 @@ function solveGame(){
 		var flaggedCounter = 0;
 		var enableCounter = 0;
 		var enablePos = [];
-		if(mineNumber == 0)continue;
 
+		if(mineNumber == 0)continue;
 		// count surround status ( flagged 、 enable)
 		for(var r = pos["row"]-1 ; r <= pos["row"]+ 1 ; r++){
 			for(var c = pos["col"]-1 ; c <= pos["col"]+ 1 ; c++){
@@ -172,6 +174,7 @@ function solveGame(){
 			// console.log("happened:" + pos["row"] + " , " + pos["col"]);
 			// console.log("mineNumber:" + mineNumber, "flaggedCount:"+flaggedCounter,"enableCounter"+enableCounter);
 			// console.log(enablePos);
+
 			var possibleComb = {
 				mineCounter : mineNumber - flaggedCounter ,
 				positions : []
