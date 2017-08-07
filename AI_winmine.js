@@ -56,6 +56,23 @@ function isPosInArray(pos,posArray){
 	return false
 }
 
+function isPossibleCombInArray(comb,combArray){
+	for(var i = 0 ; i<combArray.length;i++){
+		var commbArrayMineCounter = combArray[i].mineCounter;
+		var commbArrayPositions = combArray[i].positions;
+		if(commbArrayMineCounter != comb.mineCounter)continue;
+		if(commbArrayPositions.length != comb.positions.length)continue;
+		for(var j = 0 ; j<comb.positions.length;j++){
+			if( !isPosInArray(comb.positions,commbArrayPositions)){
+				break;
+			}
+			return true;
+		}
+	}
+	return false;
+}
+
+
 function getRandom(min,max){
 	return Math.floor(Math.random() * (max - min + 1)) + min;
 }
@@ -151,6 +168,24 @@ function solveGame(){
 				}
 			}
 		}
+		else if(mineNumber - flaggedCounter == (enableCounter - 1) ){
+			console.log("happened:" + pos["row"] + " , " + pos["col"]);
+			console.log("mineNumber:" + mineNumber, "flaggedCount:"+flaggedCounter,"enableCounter"+enableCounter);
+			console.log(enablePos);
+			var possibleComb = {
+				mineCounter : mineNumber - flaggedCounter ,
+				positions : []
+			}
+			for(var i = 0 ; i<enablePos.length;i++){
+				possibleComb.positions.push({
+					row:enablePos[i].row,
+					col:enablePos[i].col
+				});
+			}
+			if(!isPossibleCombInArray(possibleComb , newPossibleMineCombStore)){
+				newPossibleMineCombStore.push(possibleComb)
+			}
+		}
 	}
 
 	for(var i=0;i<thisTurnFindMines.length;i++){
@@ -187,7 +222,7 @@ function work(){
 	if(lastSweptGrids === thisSweptGrids){
 		cantFoundWorkCounter ++;
 		if(cantFoundWorkCounter >= 3){
-			randomClickGrid();
+			stop();
 		}
 	}else{
 		cantFoundWorkCounter = 0;
@@ -208,5 +243,7 @@ var rows = null;
 var cols = null;
 var lastSweptGrids = null;
 var cantFoundWorkCounter = 0;
+// fomat [  <預測> , {   mineCounter:<潛在個數> , positions:[ <淺在位置>,{row:,col:} ]    }   ]
+var possibleMineCombStore = [];
 var AIIntervalID = null;
 initiDate();
