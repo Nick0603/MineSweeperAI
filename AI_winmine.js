@@ -237,8 +237,18 @@ function start(millis){
 function stop(){
 	clearInterval(AIIntervalID);
 	console.log(" --------------- ");
-	console.log(possibleMineCombStore);
+	
+	for(var i =0 ; i<possibleMineCombStore.length ; i++){
+		var possibleMineComb = possibleMineCombStore[i];
+		console.log("以下區塊中會有 " + possibleMineComb.mineCounter + " 格是炸彈");
+		for(var j=0 ; j<possibleMineComb.positions.length ; j++){
+			var pos = possibleMineComb.positions[j];
+			console.log("row:"+ pos["row"],"col:"+ pos["col"]);
+		}
+		console.log("____");
+	}
 	console.log("stop");
+
 }
 
 var rows = null;
