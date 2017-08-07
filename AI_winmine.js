@@ -65,14 +65,24 @@ function initiDate(){
 }
 
 function randomClickGrid(rows,cols){
-	var changeModeBtn = document.getElementById("change-mode")
 	var enabledGrids = document.querySelectorAll(".enabled");
-	if(changeModeBtn.innerText != "Trigger Mode")changeModeBtn.click();
 	var grid = enabledGrids[getRandom(0,enabledGrids.length)];
-	gridClick(grid);
+	gridClick("trigger",grid);
 }
 
-function gridClick(grid){
+function gridClick(mode,grid){
+
+	var changeModeBtn = document.getElementById("change-mode")
+	// flagged or Trigger Mode
+	if(mode != "flagged" && mode != "trigger"){
+		throw new UserException('InvalidClickMode');
+	}
+	if( (mode == "flagged" && changeModeBtn.innerText != "Flag Mode"   ) ||
+		(mode == "trigger" && changeModeBtn.innerText != "Trigger Mode")
+	){
+		changeModeBtn.click();
+	}
+
 	grid.click();
 	// 檢測是否踩到地雷
 	pos = getPosition(grid);
@@ -83,10 +93,15 @@ function gridClick(grid){
 	}
 }
 
-function playGame(){
+function solveGame(){
+
 
 	var grids = document.querySelectorAll(".grid-unit");
 	var sweptGrids = document.querySelectorAll(".swept");
+	if(sweptGrids.length == 0){
+		randomClickGrid(rows,cols);
+		return ;
+	}
 
 	// item format [  {row: , col:},{row: , col:}]
 	var thisTurnFindMines = [];
@@ -135,23 +150,17 @@ function playGame(){
 		}
 	}
 
-	var changeModeBtn = document.getElementById("change-mode")
-	if(sweptGrids.length == 0){
-		randomClickGrid(rows,cols);
-	}else{
-		if(changeModeBtn.innerText != "Flag Mode")changeModeBtn.click();
-		for(var i=0;i<thisTurnFindMines.length;i++){
-			pos = thisTurnFindMines[i];
-			grid = getGrid(grids,pos["r"],pos["c"]);
-			gridClick(grid);
-		}
-		if(changeModeBtn.innerText != "Trigger Mode")changeModeBtn.click();
-		for(var i=0;i<thisTurnFindSecure.length;i++){
-			pos = thisTurnFindSecure[i];
-			grid = getGrid(grids,pos["r"],pos["c"]);
-			gridClick(grid);
-		}
+	for(var i=0;i<thisTurnFindMines.length;i++){
+		pos = thisTurnFindMines[i];
+		grid = getGrid(grids,pos["r"],pos["c"]);
+		gridClick("flagged",grid);
 	}
+	for(var i=0;i<thisTurnFindSecure.length;i++){
+		pos = thisTurnFindSecure[i];
+		grid = getGrid(grids,pos["r"],pos["c"]);
+		gridClick("trigger",grid);
+	}
+
 	return sweptGrids.length;
 }
 
@@ -169,7 +178,7 @@ function work(){
 		stop();
 	}
 
-	thisSweptGrids = playGame();
+	thisSweptGrids = solveGame();
 	if(lastSweptGrids === thisSweptGrids){
 		cantFoundWorkCounter ++;
 		if(cantFoundWorkCounter >= 3){
@@ -194,5 +203,7 @@ var rows = null;
 var cols = null;
 var lastSweptGrids = null;
 var cantFoundWorkCounter = 0;
+// fomat [  <預測> , {   n:<潛在個數> , pos:[ <淺在位置>,{row:,col:} ]    }   ]
+var possibleMineStore = [];
 var AIIntervalID = null;
 initiDate();
