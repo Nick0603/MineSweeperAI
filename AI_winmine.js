@@ -48,8 +48,8 @@ function hasClass(elem,className){
 
 function isPosInArray(pos,posArray){
 	for(var i = 0 ; i<posArray.length;i++){
-		if(posArray[i].r == pos.r &&
-		   posArray[i].c == pos.c){
+		if(posArray[i].row == pos.row &&
+		   posArray[i].col == pos.col){
 			return true;
 		}
 	}
@@ -106,6 +106,7 @@ function solveGame(){
 	// item format [  {row: , col:},{row: , col:}]
 	var thisTurnFindMines = [];
 	var thisTurnFindSecure = [];
+	var newPossibleMineCombStore = [];
 
 	for(let item=0;item<sweptGrids.length;item++){
 		var grid = sweptGrids[item];
@@ -119,6 +120,8 @@ function solveGame(){
 		var enableCounter = 0;
 		var enablePos = [];
 		if(mineNumber == 0)continue;
+
+		// count surround status ( flagged 、 enable)
 		for(var r = pos["row"]-1 ; r <= pos["row"]+ 1 ; r++){
 			for(var c = pos["col"]-1 ; c <= pos["col"]+ 1 ; c++){
 				if(r == pos["row"] && c == pos["col"])continue;
@@ -129,7 +132,7 @@ function solveGame(){
 					}
 					if(hasClass(targetGrid,"enabled")){
 						enableCounter++;
-						enablePos.push({r,c});
+						enablePos.push({row:r,col:c});
 					}
 				}
 			}
@@ -152,14 +155,16 @@ function solveGame(){
 
 	for(var i=0;i<thisTurnFindMines.length;i++){
 		pos = thisTurnFindMines[i];
-		grid = getGrid(grids,pos["r"],pos["c"]);
+		grid = getGrid(grids,pos["row"],pos["col"]);
 		gridClick("flagged",grid);
 	}
 	for(var i=0;i<thisTurnFindSecure.length;i++){
 		pos = thisTurnFindSecure[i];
-		grid = getGrid(grids,pos["r"],pos["c"]);
+		grid = getGrid(grids,pos["row"],pos["col"]);
 		gridClick("trigger",grid);
 	}
+
+	possibleMineCombStore = newPossibleMineCombStore;
 
 	return sweptGrids.length;
 }
@@ -203,7 +208,5 @@ var rows = null;
 var cols = null;
 var lastSweptGrids = null;
 var cantFoundWorkCounter = 0;
-// fomat [  <預測> , {   n:<潛在個數> , pos:[ <淺在位置>,{row:,col:} ]    }   ]
-var possibleMineStore = [];
 var AIIntervalID = null;
 initiDate();
