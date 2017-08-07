@@ -63,7 +63,7 @@ function isPossibleCombInArray(comb,combArray){
 		if(commbArrayMineCounter != comb.mineCounter)continue;
 		if(commbArrayPositions.length != comb.positions.length)continue;
 		for(var j = 0 ; j<comb.positions.length;j++){
-			if( !isPosInArray(comb.positions,commbArrayPositions)){
+			if( !isPosInArray(comb.positions[j],commbArrayPositions)){
 				break;
 			}
 			return true;
@@ -169,9 +169,9 @@ function solveGame(){
 			}
 		}
 		else if(mineNumber - flaggedCounter == (enableCounter - 1) ){
-			console.log("happened:" + pos["row"] + " , " + pos["col"]);
-			console.log("mineNumber:" + mineNumber, "flaggedCount:"+flaggedCounter,"enableCounter"+enableCounter);
-			console.log(enablePos);
+			// console.log("happened:" + pos["row"] + " , " + pos["col"]);
+			// console.log("mineNumber:" + mineNumber, "flaggedCount:"+flaggedCounter,"enableCounter"+enableCounter);
+			// console.log(enablePos);
 			var possibleComb = {
 				mineCounter : mineNumber - flaggedCounter ,
 				positions : []
@@ -236,6 +236,8 @@ function start(millis){
 }
 function stop(){
 	clearInterval(AIIntervalID);
+	console.log(" --------------- ");
+	console.log(possibleMineCombStore);
 	console.log("stop");
 }
 
