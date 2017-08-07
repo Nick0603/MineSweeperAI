@@ -28,8 +28,9 @@ function getGrid(grids,row,col){
 		return null;
 	}	
 }
-function getPosition(posString){
+function getPosition(grid){
 	// str format:  position-<row>-<col>
+	var posString = grid['id'];
 	var cutStrs = posString.split("-");
 	var row = parseInt( cutStrs[1] );
 	var col = parseInt( cutStrs[2] );
@@ -60,7 +61,6 @@ function getRandom(min,max){
 }
 
 function initiDate(){
-	var grids = document.querySelectorAll(".grid-unit");
 	[rows,cols] = getSize();
 }
 
@@ -69,7 +69,18 @@ function randomClickGrid(rows,cols){
 	var enabledGrids = document.querySelectorAll(".enabled");
 	if(changeModeBtn.innerText != "Trigger Mode")changeModeBtn.click();
 	var grid = enabledGrids[getRandom(0,enabledGrids.length)];
+	gridClick(grid);
+}
+
+function gridClick(grid){
 	grid.click();
+	// 檢測是否踩到地雷
+	pos = getPosition(grid);
+	afterGrid = document.getElementById("position-" + pos['row'] + "-" + pos['col'] );
+	classNames = afterGrid.className.split(" ");
+	if(classNames.indexOf("mine") != -1){
+		stop();
+	}
 }
 
 function playGame(){
@@ -84,7 +95,7 @@ function playGame(){
 	for(let item=0;item<sweptGrids.length;item++){
 		var grid = sweptGrids[item];
 		//id == position / position-<row>-<col>
-		var pos = getPosition( grid["id"] );
+		var pos = getPosition( grid );
 		// format : "grid-unit swept swept-num-<number>"
 		var mineNumberClass = grid.className.split(" ")[2]
 		// format : swept-num-<number>"
@@ -131,13 +142,13 @@ function playGame(){
 		for(var i=0;i<thisTurnFindMines.length;i++){
 			pos = thisTurnFindMines[i];
 			grid = getGrid(grids,pos["r"],pos["c"]);
-			grid.click();
+			gridClick(grid);
 		}
 		if(changeModeBtn.innerText != "Trigger Mode")changeModeBtn.click();
 		for(var i=0;i<thisTurnFindSecure.length;i++){
 			pos = thisTurnFindSecure[i];
 			grid = getGrid(grids,pos["r"],pos["c"]);
-			grid.click();
+			gridClick(grid);
 		}
 	}
 	return sweptGrids.length;
@@ -183,9 +194,6 @@ var lastSweptGrids = null;
 var cantFoundWorkCounter = 0;
 var AIIntervalID = null;
 initiDate();
-
-
-
 
 
 
