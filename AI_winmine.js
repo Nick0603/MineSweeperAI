@@ -1,3 +1,4 @@
+
 function getSize(){
 	var rows = 0;
 	while(true){
@@ -81,6 +82,8 @@ function getRandom(min,max){
 
 function initiDate(){
 	[rows,cols] = getSize();
+	cantFoundWorkCounter = 0;
+	possibleMineCombStore = [];
 }
 
 function randomClickGrid(rows,cols){
@@ -108,7 +111,7 @@ function gridClick(mode,grid){
 	afterGrid = document.getElementById("position-" + pos['row'] + "-" + pos['col'] );
 	classNames = afterGrid.className.split(" ");
 	if(classNames.indexOf("mine") != -1){
-		stop();
+		stopAutoPlay();
 	}
 }
 
@@ -275,7 +278,7 @@ function printPossibleMineComb(possibleMineCombStore){
 }
 function work(){
 	if( isSuccess() ){
-		stop();
+		stopAutoPlay();
 	}
 
 	thisSweptGrids = solveGame();
@@ -290,21 +293,21 @@ function work(){
 	}
 }
 
-function start(millis){
+function autoPlay(millis){
 	if(!millis && millis != 0)millis = 500;
+	initiDate();
 	AIIntervalID = setInterval(work,millis);
 }
-function stop(){
+function stopAutoPlay(){
 	clearInterval(AIIntervalID);
-	console.log(" --------------- ");
-	console.log("stop");
+	// console.log(" --------------- ");
+	// console.log("stopAutoPlay");
 }
 
 var rows = null;
 var cols = null;
 var lastSweptGrids = null;
-var cantFoundWorkCounter = 0;
+var cantFoundWorkCounter = null ;
 // fomat [  <預測> , {   mineCounter:<潛在個數> , positions:[ <淺在位置>,{row:,col:} ]    }   ]
 var possibleMineCombStore = [];
 var AIIntervalID = null;
-initiDate();

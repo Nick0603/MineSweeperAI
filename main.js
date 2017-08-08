@@ -10,6 +10,8 @@ var $game = {
   btnGroup: null,
   newGameBtn: null,
   newGameModal: null,
+  autoPlayGameBtn: null,
+  stopAutoPlayGameBtn:null,
   startGameBtn: null,
   successModal: null,
   resumeBtn: null,
@@ -156,6 +158,8 @@ function initGameElements() {
   $game.modeBtn      = document.getElementById('change-mode');
   $game.newGameBtn   = document.getElementById('new-game');
   $game.newGameModal = document.getElementById('new-game-modal');
+  $game.autoPlayGameBtn   = document.getElementById('auto-play');
+  $game.stopAutoPlayGameBtn = document.getElementById('stop-auto-play');
   $game.startGameBtn = document.getElementById('start-game');
   $game.successModal = document.getElementById('success-modal');
   $game.resumeBtn    = document.getElementById('resume-btn');
@@ -190,6 +194,18 @@ function initControlSystem() {
   $game.newGameBtn.addEventListener('click', function(event) {
     $game.newGameModal.style.display = 'block';
     $game.stopTimeCounter();
+  });
+
+  $game.autoPlayGameBtn.addEventListener('click', function(event) {
+    autoPlay(100);
+    $game.autoPlayGameBtn.style.display = 'none';
+    $game.stopAutoPlayGameBtn.style.display = 'block';
+  });
+
+  $game.stopAutoPlayGameBtn.addEventListener('click', function(event) {
+    stopAutoPlay(100);
+    $game.autoPlayGameBtn.style.display = "block";
+    $game.stopAutoPlayGameBtn.style.display = "none";
   });
 
   var inputEvent = function(event) {
@@ -336,13 +352,17 @@ function updateStatistic(bool) {
 
 function gameSuccess() {
   $game.stopTimeCounter();
+  
   $game.resultTime.innerHTML = $game.currentTimeString();
+  $game.autoPlayGameBtn.style.display = "block";
+  $game.stopAutoPlayGameBtn.style.display = "none";
   $game.successModal.style.display = 'block';
 }
 
 function gameOver() {
   $game.stopTimeCounter();
-
+  $game.autoPlayGameBtn.style.display = "block";
+  $game.stopAutoPlayGameBtn.style.display = "none";
   loopThroughGrid(function(row, col) {
     var unit = $grid.getUnit(row, col);
     var data = $grid.getUnitData(row, col);
