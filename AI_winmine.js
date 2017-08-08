@@ -137,7 +137,7 @@ function solveGame(){
 		var mineNumber = parseInt(mineNumberClass.split("-")[2])
 		var flaggedCounter = 0;
 		var enableCounter = 0;
-		var enablePos = [];
+		var enablePosArray = [];
 
 		if(mineNumber == 0)continue;
 		// count surround status ( flagged 、 enable)
@@ -151,38 +151,66 @@ function solveGame(){
 					}
 					if(hasClass(targetGrid,"enabled")){
 						enableCounter++;
-						enablePos.push({row:r,col:c});
+						enablePosArray.push({row:r,col:c});
 					}
 				}
 			}
 		}
 
+		// solve
 		if(mineNumber - flaggedCounter == enableCounter){
-			for(let i =0;i<enablePos.length;i++){
-				if(!isPosInArray(enablePos[i],thisTurnFindMines)){
-					thisTurnFindMines.push(enablePos[i]);
+			for(let i =0;i<enablePosArray.length;i++){
+				if(!isPosInArray(enablePosArray[i],thisTurnFindMines)){
+					thisTurnFindMines.push(enablePosArray[i]);
 				}
 			}
 		}else if(mineNumber - flaggedCounter == 0){
-			for(let i =0;i<enablePos.length;i++){
-				if(!isPosInArray(enablePos[i],thisTurnFindSecure)){
-					thisTurnFindSecure.push(enablePos[i]);
+			for(let i =0;i<enablePosArray.length;i++){
+				if(!isPosInArray(enablePosArray[i],thisTurnFindSecure)){
+					thisTurnFindSecure.push(enablePosArray[i]);
+				}
+			}
+		}else{
+			// search possibleMineCombStore to find psiiableComb to match and deduction found about new falgged or secure  pos
+			for(var i = 0;i<possibleMineCombStore.length;i++){
+				var possibleMineComb = possibleMineCombStore[i];
+				var possibleMineCombPosArray = possibleMineComb.positions;
+				var possibleMineNumber = possibleMineComb.mineCounter;
+				for( j=0 ; j<possibleMineCombPosArray.length ; j++ ){
+					CombPosition = possibleMineCombPosArray[j];
+					if(!isPosInArray(CombPosition,enablePosArray))break;
+				}
+				if(j == possibleMineCombPosArray.length){
+					var filteredMineNumber = mineNumber - possibleMineNumber;
+					var filteredEnableCounter = enableCounter - possibleMineCombPosArray.length;
+					if(filteredEnableCounter == 0)continue;
+					if(filteredMineNumber - flaggedCounter  == filteredEnableCounter){
+						console.log("can find new mine pos");
+						console.log("row:"+pos["row"],"col:"+pos["col"]);
+						stop();
+					}else if(filteredMineNumber - flaggedCounter == 0){
+						console.log("can find new secure pos");
+						console.log("row:"+pos["row"],"col:"+pos["col"]);
+						stop();
+					}
 				}
 			}
 		}
-		else if(mineNumber - flaggedCounter == (enableCounter - 1) ){
+
+		//save possiableComb Data
+		if(mineNumber - flaggedCounter == (enableCounter - 1) ){
 			// console.log("happened:" + pos["row"] + " , " + pos["col"]);
 			// console.log("mineNumber:" + mineNumber, "flaggedCount:"+flaggedCounter,"enableCounter"+enableCounter);
-			// console.log(enablePos);
+			// console.log(enablePosArray);
 
 			var possibleComb = {
 				mineCounter : mineNumber - flaggedCounter ,
 				positions : []
 			}
-			for(var i = 0 ; i<enablePos.length;i++){
+			for(var i = 0 ; i<enablePosArray.length;i++){
 				possibleComb.positions.push({
-					row:enablePos[i].row,
-					col:enablePos[i].col
+					row:enablePosArray[i].row,
+					col:enablePosArray[i].col
 				});
 			}
 			if(!isPossibleCombInArray(possibleComb , newPossibleMineCombStore)){
@@ -216,6 +244,18 @@ function isSuccess(){
 	}
 }
 
+
+function printPossibleMineComb(possibleMineCombStore){
+	for(var i =0 ; i<possibleMineCombStore.length ; i++){
+		var possibleMineComb = possibleMineCombStore[i];
+		console.log("以下區塊中會有 " + possibleMineComb.mineCounter + " 格是炸彈");
+		for(var j=0 ; j<possibleMineComb.positions.length ; j++){
+			var pos = possibleMineComb.positions[j];
+			console.log("row:"+ pos["row"],"col:"+ pos["col"]);
+		}
+		console.log("____");
+	}
+}
 function work(){
 	if( isSuccess() ){
 		stop();
@@ -225,7 +265,7 @@ function work(){
 	if(lastSweptGrids === thisSweptGrids){
 		cantFoundWorkCounter ++;
 		if(cantFoundWorkCounter >= 3){
-			stop();
+			randomClickGrid(rows,cols);
 		}
 	}else{
 		cantFoundWorkCounter = 0;
@@ -240,18 +280,7 @@ function start(millis){
 function stop(){
 	clearInterval(AIIntervalID);
 	console.log(" --------------- ");
-	
-	for(var i =0 ; i<possibleMineCombStore.length ; i++){
-		var possibleMineComb = possibleMineCombStore[i];
-		console.log("以下區塊中會有 " + possibleMineComb.mineCounter + " 格是炸彈");
-		for(var j=0 ; j<possibleMineComb.positions.length ; j++){
-			var pos = possibleMineComb.positions[j];
-			console.log("row:"+ pos["row"],"col:"+ pos["col"]);
-		}
-		console.log("____");
-	}
 	console.log("stop");
-
 }
 
 var rows = null;
