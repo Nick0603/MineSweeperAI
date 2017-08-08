@@ -282,7 +282,7 @@ function work(){
 	if(lastSweptGrids === thisSweptGrids){
 		cantFoundWorkCounter ++;
 		if(cantFoundWorkCounter >= 3){
-			stop();
+			randomClickGrid(rows,cols);
 		}
 	}else{
 		cantFoundWorkCounter = 0;
@@ -291,14 +291,13 @@ function work(){
 }
 
 function start(millis){
-	if(!millis)millis = 500;
+	if(!millis && millis != 0)millis = 500;
 	AIIntervalID = setInterval(work,millis);
 }
 function stop(){
 	clearInterval(AIIntervalID);
 	console.log(" --------------- ");
 	console.log("stop");
-
 }
 
 var rows = null;
