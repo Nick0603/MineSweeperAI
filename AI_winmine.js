@@ -157,13 +157,21 @@ function solveGame(){
 			}
 		}
 
-		// solve
+// solve
+		
+/*
+	strategy 1:
+		compare the mineNumber and the surround enableCounter
+		to find obvious mine pos or secure pos
+*/
+		//detect absolute mine pos
 		if(mineNumber - flaggedCounter == enableCounter){
 			for(let i =0;i<enablePosArray.length;i++){
 				if(!isPosInArray(enablePosArray[i],thisTurnFindMines)){
 					thisTurnFindMines.push(enablePosArray[i]);
 				}
 			}
+		//detect absolute secure pos
 		}else if(mineNumber - flaggedCounter == 0){
 			for(let i =0;i<enablePosArray.length;i++){
 				if(!isPosInArray(enablePosArray[i],thisTurnFindSecure)){
@@ -171,7 +179,12 @@ function solveGame(){
 				}
 			}
 		}else{
-			// search possibleMineCombStore to find psiiableComb to match and deduction found about new falgged or secure  pos
+/*
+	strategy 2:
+		search possibleMineCombStore to find poiiableComb that can be completly contained in enabledPosArray 
+		filter the enabledPos that match with mineComb
+		use strategy 1 to search the left enabledPos to find new falgged or secure  pos
+*/
 			for(var i = 0;i<possibleMineCombStore.length;i++){
 				var possibleMineComb = possibleMineCombStore[i];
 				var possibleMineCombPosArray = possibleMineComb.positions;
@@ -185,13 +198,17 @@ function solveGame(){
 					var filteredEnableCounter = enableCounter - possibleMineCombPosArray.length;
 					if(filteredEnableCounter == 0)continue;
 					if(filteredMineNumber - flaggedCounter  == filteredEnableCounter){
-						console.log("can find new mine pos");
-						console.log("row:"+pos["row"],"col:"+pos["col"]);
-						stop();
+						for(let k =0;k<enablePosArray.length;k++){
+							if(!isPosInArray(enablePosArray[k],thisTurnFindMines) && !isPosInArray(enablePosArray[k],possibleMineCombPosArray)){
+								thisTurnFindMines.push(enablePosArray[k]);
+							}
+						}
 					}else if(filteredMineNumber - flaggedCounter == 0){
-						console.log("can find new secure pos");
-						console.log("row:"+pos["row"],"col:"+pos["col"]);
-						stop();
+						for(let k=0;k<enablePosArray.length;k++){
+							if(!isPosInArray(enablePosArray[k],thisTurnFindSecure)  && !isPosInArray(enablePosArray[k],possibleMineCombPosArray) ){
+								thisTurnFindSecure.push(enablePosArray[k]);
+							}
+						}
 					}
 				}
 			}
@@ -265,7 +282,7 @@ function work(){
 	if(lastSweptGrids === thisSweptGrids){
 		cantFoundWorkCounter ++;
 		if(cantFoundWorkCounter >= 3){
-			randomClickGrid(rows,cols);
+			stop();
 		}
 	}else{
 		cantFoundWorkCounter = 0;
@@ -281,6 +298,7 @@ function stop(){
 	clearInterval(AIIntervalID);
 	console.log(" --------------- ");
 	console.log("stop");
+
 }
 
 var rows = null;
