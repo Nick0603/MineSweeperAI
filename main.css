@@ -107,6 +107,11 @@ div#statistic > div > p#flags-count.too-much-flags:after {
 .grid-unit.mine.game-over {
   background-color: #833;
 }
+
+.grid-unit.hintMine{background: red}
+.grid-unit.hintSafe{background: green}
+
+
 .btn-group {
   position: absolute;
   left: 50%;

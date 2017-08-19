@@ -10,6 +10,7 @@ var $game = {
   btnGroup: null,
   newGameBtn: null,
   newGameModal: null,
+  hintBtn:null,
   autoPlayGameBtn: null,
   stopAutoPlayGameBtn:null,
   startGameBtn: null,
@@ -158,6 +159,7 @@ function initGameElements() {
   $game.modeBtn      = document.getElementById('change-mode');
   $game.newGameBtn   = document.getElementById('new-game');
   $game.newGameModal = document.getElementById('new-game-modal');
+  $game.hintBtn      = document.getElementById('hint');
   $game.autoPlayGameBtn   = document.getElementById('auto-play');
   $game.stopAutoPlayGameBtn = document.getElementById('stop-auto-play');
   $game.startGameBtn = document.getElementById('start-game');
@@ -196,15 +198,29 @@ function initControlSystem() {
     $game.stopTimeCounter();
   });
 
+  $game.hintBtn.addEventListener('click',function(){
+    var hint = $mineSweeperAI.getHint();
+    if(hint){
+      var unit = $grid.getUnit(hint.row,hint.col);
+      if(hint.type == 'mine'){
+        unit.addClass('hintMine')
+      }else{
+        unit.addClass('hintSafe')
+      }
+    }else{
+      alert("can't find any Hint! ")
+    }
+  });
+  
   $game.autoPlayGameBtn.addEventListener('click', function(event) {
     $mineSweeperAI.start(100);
     $game.autoPlayGameBtn.style.display = 'none';
-    $game.stopAutoPlayGameBtn.style.display = 'block';
+    $game.stopAutoPlayGameBtn.style.display = 'inline-block';
   });
 
   $game.stopAutoPlayGameBtn.addEventListener('click', function(event) {
     $mineSweeperAI.stop();
-    $game.autoPlayGameBtn.style.display = "block";
+    $game.autoPlayGameBtn.style.display = "inline-block";
     $game.stopAutoPlayGameBtn.style.display = "none";
   });
 
@@ -354,7 +370,7 @@ function gameSuccess() {
   $game.stopTimeCounter();
   $mineSweeperAI.stop();
   $game.resultTime.innerHTML = $game.currentTimeString();
-  $game.autoPlayGameBtn.style.display = "block";
+  $game.autoPlayGameBtn.style.display = "inline-block";
   $game.stopAutoPlayGameBtn.style.display = "none";
   $game.successModal.style.display = 'block';
 }
@@ -362,7 +378,7 @@ function gameSuccess() {
 function gameOver() {
   $game.stopTimeCounter();
   $mineSweeperAI.stop();
-  $game.autoPlayGameBtn.style.display = "block";
+  $game.autoPlayGameBtn.style.display = "inline-block";
   $game.stopAutoPlayGameBtn.style.display = "none";
   loopThroughGrid(function(row, col) {
     var unit = $grid.getUnit(row, col);
