@@ -1,313 +1,193 @@
-
-function getSize(){
-	var rows = 0;
-	while(true){
-		var nextRowGrid = document.getElementById("position-1-" + (rows+1));
-		if(nextRowGrid){
-			rows++
-		}else{
-			break;
+$mineSweeperAI = {
+	unitClick:function(mode,unit){
+		var changeModeBtn = document.getElementById("change-mode")
+		if(mode != "flagged" && mode != "trigger"){
+			throw new UserException('InvalidClickMode');
 		}
-	}
-	var cols = 0;
-	while(true){
-		var nextColGrid = document.getElementById("position-" + (cols+1) + "-1");
-		if(nextColGrid){
-			cols++
-		}else{
-			break;
+		if( (mode == "flagged" && changeModeBtn.innerText != "Flag Mode"   ) ||
+			(mode == "trigger" && changeModeBtn.innerText != "Trigger Mode")
+		){
+			changeModeBtn.click();
 		}
-	}
-	return [rows,cols];
-}
-
-function getGrid(grids,row,col){
-	if( 1 <= row && row <= rows &&
-		1 <= col && col <= cols ){
-		return grids[(row-1) * rows + (col-1)];
-	}else{
-		return null;
-	}	
-}
-function getPosition(grid){
-	// str format:  position-<row>-<col>
-	var posString = grid['id'];
-	var cutStrs = posString.split("-");
-	var row = parseInt( cutStrs[1] );
-	var col = parseInt( cutStrs[2] );
-	return {row:row,col:col};	
-}
-
-function hasClass(elem,className){
-	classNames = elem.className.split(" ");
-	if(classNames.indexOf(className) != -1){
-		return true;
-	}else{
-		return false;
-	}
-}
-
-function isPosInArray(pos,posArray){
-	for(var i = 0 ; i<posArray.length;i++){
-		if(posArray[i].row == pos.row &&
-		   posArray[i].col == pos.col){
-			return true;
+		unit.click();
+	},
+	randomUnitClick:function(){
+		var enabledUnits = $grid.element.querySelectorAll(".enabled");
+		var unit = enabledUnits[randomNumber(0,enabledUnits.length)];
+		$mineSweeperAI.unitClick("trigger",unit);
+	},
+	getUnitData:function(unit){
+		// format: position-<row>-<col>
+		var idString = unit.id;
+		var row = idString.split("-")[1];
+		var col = idString.split("-")[2];
+		// format: swept-num-<mineCounter>
+		var sweptString = unit.classList[2];
+		var mineCounter = sweptString.split("-")[2];
+		return {
+			row:parseInt(row),
+			col:parseInt(col),
+			mineCounter:parseInt(mineCounter)
 		}
-	}
-	return false
-}
-
-function isPossibleCombInArray(comb,combArray){
-	for(var i = 0 ; i<combArray.length;i++){
-		var commbArrayMineCounter = combArray[i].mineCounter;
-		var commbArrayPositions = combArray[i].positions;
-		if(commbArrayMineCounter != comb.mineCounter)continue;
-		if(commbArrayPositions.length != comb.positions.length)continue;
-		for(var j = 0 ; j<comb.positions.length;j++){
-			if( !isPosInArray(comb.positions[j],commbArrayPositions)){
-				break;
+	},
+	Pos:function(row,col){
+		this.row = row;
+		this.col = col;
+		this.isInThisArray = function(posArray){
+			for(var i = 0 ; i<posArray.length;i++){
+				if(posArray[i].row == this.row &&
+				   posArray[i].col == this.col){
+					return true;
+				}
 			}
+			return false
 		}
-		if(j == comb.positions.length){
-			return true;
+	},
+	MinePair:function(mineCounter){
+		this.mineCounter = mineCounter;
+		this.posArray = [];
+		this.isInThisArray = function(minePairArray){
+			for(let i=0 ; i<minePairArray.length ; i++){
+				var mineCounter = minePairArray[i].mineCounter;
+				var posArray = minePairArray[i].posArray;
+				if(this.mineCounter != mineCounter)continue;
+				if(this.posArray.length != posArray.length)continue;
+				for(j = 0 ; j<this.posArray.length;j++){
+					if( !this.posArray[j].isInThisArray(posArray)){
+						break;
+					}
+				}
+				if(j == this.posArray.length-1){
+					return true;
+				}
+			}
+			return false;
 		}
-	}
-	return false;
-}
-
-
-function getRandom(min,max){
-	return Math.floor(Math.random() * (max - min + 1)) + min;
-}
-
-function initiDate(){
-	[rows,cols] = getSize();
-	cantFoundWorkCounter = 0;
-	possibleMineCombStore = [];
-}
-
-function randomClickGrid(rows,cols){
-	var enabledGrids = document.querySelectorAll(".enabled");
-	var grid = enabledGrids[getRandom(0,enabledGrids.length)];
-	gridClick("trigger",grid);
-}
-
-function gridClick(mode,grid){
-
-	var changeModeBtn = document.getElementById("change-mode")
-	// flagged or Trigger Mode
-	if(mode != "flagged" && mode != "trigger"){
-		throw new UserException('InvalidClickMode');
-	}
-	if( (mode == "flagged" && changeModeBtn.innerText != "Flag Mode"   ) ||
-		(mode == "trigger" && changeModeBtn.innerText != "Trigger Mode")
-	){
-		changeModeBtn.click();
-	}
-
-	grid.click();
-	// 檢測是否踩到地雷
-	pos = getPosition(grid);
-	afterGrid = document.getElementById("position-" + pos['row'] + "-" + pos['col'] );
-	classNames = afterGrid.className.split(" ");
-	if(classNames.indexOf("mine") != -1){
-		stopAutoPlay();
-	}
-}
-
-function solveGame(){
-
-
-	var grids = document.querySelectorAll(".grid-unit");
-	var sweptGrids = document.querySelectorAll(".swept");
-	if(sweptGrids.length == 0){
-		randomClickGrid(rows,cols);
-		return ;
-	}
-
-	// item format [  {row: , col:},{row: , col:}]
-	var thisTurnFindMines = [];
-	var thisTurnFindSecure = [];
-	var newPossibleMineCombStore = [];
-
-	for(let item=0;item<sweptGrids.length;item++){
-		var grid = sweptGrids[item];
-		//id == position / position-<row>-<col>
-		var pos = getPosition( grid );
-		// format : "grid-unit swept swept-num-<number>"
-		var mineNumberClass = grid.className.split(" ")[2]
-		// format : swept-num-<number>"
-		var mineNumber = parseInt(mineNumberClass.split("-")[2])
-		var flaggedCounter = 0;
-		var enableCounter = 0;
-		var enablePosArray = [];
-
-		if(mineNumber == 0)continue;
-		// count surround status ( flagged 、 enable)
-		for(var r = pos["row"]-1 ; r <= pos["row"]+ 1 ; r++){
-			for(var c = pos["col"]-1 ; c <= pos["col"]+ 1 ; c++){
-				if(r == pos["row"] && c == pos["col"])continue;
-				targetGrid = getGrid(grids,r,c);
-				if(targetGrid != null){
-					if(hasClass(targetGrid,"flagged")){
+	},
+	minePairArray:[],
+	lastEnableCount:null,
+	failCounter:null,
+	IntervalID:null,
+	start:function(millis){
+			if(!millis && millis != 0)millis = 100;
+			this.lastEnableCount = 0;
+			this.failCounter = 0;
+			this.minePairArray = [];
+			this.AIIntervalID = setInterval(function(){
+				$mineSweeperAI.solveGame();
+				var enableCount = $grid.element.querySelectorAll(".enabled").length;;
+				if(this.lastEnableCount === enableCount){
+					this.failCounter ++;
+					if(this.failCounter >= 3){
+						$mineSweeperAI.randomUnitClick();
+					}
+				}else{
+					this.failCounter = 0;
+					this.lastEnableCount = enableCount;
+				}
+		},millis);
+	},
+	stop:function(){
+		clearInterval(this.AIIntervalID);
+	},
+	solveGame: function(){
+		var units = $grid.element.querySelectorAll(".grid-unit");
+		var sweptUnits = document.querySelectorAll(".swept");
+		var findMinePos = [];
+		var findSafePos = [];
+		var newMinePairArray = [];
+	
+		for(let index=0 ; index<sweptUnits.length ; index++){
+			var unit = sweptUnits[index];
+			var unitData = $mineSweeperAI.getUnitData(unit);
+			if(unitData.mineCounter == 0)continue;
+			var flaggedCounter = 0;
+			var enabledCounter = 0;
+			var enabledPosArray = [];
+			// surroundCount
+			for(let r =unitData.row-1 ; r <= unitData.row+1 ; r++){
+				for(let c = unitData.col-1 ; c <= unitData.col+1 ; c++){
+					if(r == unitData.row && c == unitData.col)continue;
+					surroundUnit = $grid.getUnit(r,c);
+					if(surroundUnit == null)continue;
+					if(surroundUnit.hasClass("flagged")){
 						flaggedCounter ++;
 					}
-					if(hasClass(targetGrid,"enabled")){
-						enableCounter++;
-						enablePosArray.push({row:r,col:c});
+					if(surroundUnit.hasClass("enabled")){
+						enabledCounter++;
+						enabledPosArray.push(new $mineSweeperAI.Pos(r,c));
 					}
 				}
 			}
-		}
-
-// solve
-		
-/*
-	strategy 1:
-		compare the mineNumber and the surround enableCounter
-		to find obvious mine pos or secure pos
-*/
-		//detect absolute mine pos
-		if(mineNumber - flaggedCounter == enableCounter){
-			for(let i =0;i<enablePosArray.length;i++){
-				if(!isPosInArray(enablePosArray[i],thisTurnFindMines)){
-					thisTurnFindMines.push(enablePosArray[i]);
+			// strategy 1:
+			if(unitData.mineCounter - flaggedCounter == enabledCounter){
+				for(let i =0;i<enabledPosArray.length;i++){
+					var enabledPos = enabledPosArray[i];
+					if(!(enabledPos.isInThisArray(findMinePos))){
+						findMinePos.push(enabledPos);
+					}
 				}
-			}
-		//detect absolute secure pos
-		}else if(mineNumber - flaggedCounter == 0){
-			for(let i =0;i<enablePosArray.length;i++){
-				if(!isPosInArray(enablePosArray[i],thisTurnFindSecure)){
-					thisTurnFindSecure.push(enablePosArray[i]);
+			}else if(unitData.mineCounter - flaggedCounter == 0){
+				for(let i =0;i<enabledPosArray.length;i++){
+					var enabledPos = enabledPosArray[i];
+					if(!(enabledPos.isInThisArray(findSafePos))){
+						findSafePos.push(enabledPos);
+					}
 				}
-			}
-		}else{
-/*
-	strategy 2:
-		search possibleMineCombStore to find poiiableComb that can be completly contained in enabledPosArray 
-		filter the enabledPos that match with mineComb
-		use strategy 1 to search the left enabledPos to find new falgged or secure  pos
-*/
-			for(var i = 0;i<possibleMineCombStore.length;i++){
-				var possibleMineComb = possibleMineCombStore[i];
-				var possibleMineCombPosArray = possibleMineComb.positions;
-				var possibleMineNumber = possibleMineComb.mineCounter;
-				for( j=0 ; j<possibleMineCombPosArray.length ; j++ ){
-					CombPosition = possibleMineCombPosArray[j];
-					if(!isPosInArray(CombPosition,enablePosArray))break;
-				}
-				if(j == possibleMineCombPosArray.length){
-					var filteredMineNumber = mineNumber - possibleMineNumber;
-					var filteredEnableCounter = enableCounter - possibleMineCombPosArray.length;
-					if(filteredEnableCounter == 0)continue;
-					if(filteredMineNumber - flaggedCounter  == filteredEnableCounter){
-						for(let k =0;k<enablePosArray.length;k++){
-							if(!isPosInArray(enablePosArray[k],thisTurnFindMines) && !isPosInArray(enablePosArray[k],possibleMineCombPosArray)){
-								thisTurnFindMines.push(enablePosArray[k]);
+			}else{
+				// strategy 2		
+				for(let i = 0;i<this.minePairArray.length;i++){
+					var minePair = this.minePairArray[i];
+					var minePairPosArray = minePair.posArray;
+					for( window.j=0 ; window.j<minePairPosArray.length ; window.j++ ){
+						pos = minePairPosArray[window.j];
+						if(!pos.isInThisArray(enabledPosArray))break;
+					}
+					if(window.j == minePairPosArray.length){
+						var filteredMineCounter = unitData.mineCounter - minePair.mineCounter;
+						var filteredEnabledCounter = enabledCounter - minePairPosArray.length;
+						if(filteredEnabledCounter == 0)continue;
+						if(filteredMineCounter - flaggedCounter  == filteredEnabledCounter){
+							for(let k =0;k<enabledPosArray.length;k++){
+								var enabledPos = enabledPosArray[k];
+								if(!enabledPos.isInThisArray(findMinePos) &&  !enabledPos.isInThisArray(minePairPosArray) ){
+									findMinePos.push(enabledPos);
+								}
 							}
-						}
-					}else if(filteredMineNumber - flaggedCounter == 0){
-						for(let k=0;k<enablePosArray.length;k++){
-							if(!isPosInArray(enablePosArray[k],thisTurnFindSecure)  && !isPosInArray(enablePosArray[k],possibleMineCombPosArray) ){
-								thisTurnFindSecure.push(enablePosArray[k]);
+						}else if(filteredMineCounter - flaggedCounter == 0){
+							for(let k=0;k<enabledPosArray.length;k++){
+								var enabledPos = enabledPosArray[k];
+								if(!enabledPos.isInThisArray(findSafePos)&&  !enabledPos.isInThisArray(minePairPosArray) ){
+									findSafePos.push(enabledPos);
+								}
 							}
 						}
 					}
 				}
 			}
-		}
-
-		//save possiableComb Data
-		if(mineNumber - flaggedCounter == (enableCounter - 1) ){
-			// console.log("happened:" + pos["row"] + " , " + pos["col"]);
-			// console.log("mineNumber:" + mineNumber, "flaggedCount:"+flaggedCounter,"enableCounter"+enableCounter);
-			// console.log(enablePosArray);
-
-			var possibleComb = {
-				mineCounter : mineNumber - flaggedCounter ,
-				positions : []
-			}
-			for(var i = 0 ; i<enablePosArray.length;i++){
-				possibleComb.positions.push({
-					row:enablePosArray[i].row,
-					col:enablePosArray[i].col
-				});
-			}
-			if(!isPossibleCombInArray(possibleComb , newPossibleMineCombStore)){
-				newPossibleMineCombStore.push(possibleComb)
+	
+			//save findMinePair
+			if(unitData.mineCounter - flaggedCounter == (enabledCounter - 1) ){
+				var findMinePair = new $mineSweeperAI.MinePair(unitData.mineCounter - flaggedCounter);
+				for(let i = 0 ; i<enabledPosArray.length;i++){
+					findMinePair.posArray.push(enabledPosArray[i]);
+				}
+				if(!findMinePair.isInThisArray(newMinePairArray)){
+					newMinePairArray.push(findMinePair)
+				}
 			}
 		}
-	}
-
-	for(var i=0;i<thisTurnFindMines.length;i++){
-		pos = thisTurnFindMines[i];
-		grid = getGrid(grids,pos["row"],pos["col"]);
-		gridClick("flagged",grid);
-	}
-	for(var i=0;i<thisTurnFindSecure.length;i++){
-		pos = thisTurnFindSecure[i];
-		grid = getGrid(grids,pos["row"],pos["col"]);
-		gridClick("trigger",grid);
-	}
-
-	possibleMineCombStore = newPossibleMineCombStore;
-
-	return sweptGrids.length;
-}
-
-function isSuccess(){
-	var successDiv = document.getElementById("success-modal");
-	if(successDiv.style.display == "block"){
-		return true;
-	}else{
-		return false;
-	}
-}
-
-
-function printPossibleMineComb(possibleMineCombStore){
-	for(var i =0 ; i<possibleMineCombStore.length ; i++){
-		var possibleMineComb = possibleMineCombStore[i];
-		console.log("以下區塊中會有 " + possibleMineComb.mineCounter + " 格是炸彈");
-		for(var j=0 ; j<possibleMineComb.positions.length ; j++){
-			var pos = possibleMineComb.positions[j];
-			console.log("row:"+ pos["row"],"col:"+ pos["col"]);
+		this.minePairArray = newMinePairArray;
+		// click unitd
+		for(let i=0;i<findMinePos.length;i++){
+			pos = findMinePos[i];
+			unit = $grid.getUnit(pos["row"],pos["col"])
+			$mineSweeperAI.unitClick("flagged",unit);
 		}
-		console.log("____");
-	}
-}
-function work(){
-	if( isSuccess() ){
-		stopAutoPlay();
-	}
-
-	thisSweptGrids = solveGame();
-	if(lastSweptGrids === thisSweptGrids){
-		cantFoundWorkCounter ++;
-		if(cantFoundWorkCounter >= 3){
-			randomClickGrid(rows,cols);
+		for(let i=0;i<findSafePos.length;i++){
+			pos = findSafePos[i];
+			unit = $grid.getUnit(pos["row"],pos["col"])
+			$mineSweeperAI.unitClick("trigger",unit);
 		}
-	}else{
-		cantFoundWorkCounter = 0;
-		lastSweptGrids = thisSweptGrids;
 	}
 }
-
-function autoPlay(millis){
-	if(!millis && millis != 0)millis = 500;
-	initiDate();
-	AIIntervalID = setInterval(work,millis);
-}
-function stopAutoPlay(){
-	clearInterval(AIIntervalID);
-	// console.log(" --------------- ");
-	// console.log("stopAutoPlay");
-}
-
-var rows = null;
-var cols = null;
-var lastSweptGrids = null;
-var cantFoundWorkCounter = null ;
-// fomat [  <預測> , {   mineCounter:<潛在個數> , positions:[ <淺在位置>,{row:,col:} ]    }   ]
-var possibleMineCombStore = [];
-var AIIntervalID = null;

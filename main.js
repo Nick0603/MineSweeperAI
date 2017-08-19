@@ -197,13 +197,13 @@ function initControlSystem() {
   });
 
   $game.autoPlayGameBtn.addEventListener('click', function(event) {
-    autoPlay(100);
+    $mineSweeperAI.start(100);
     $game.autoPlayGameBtn.style.display = 'none';
     $game.stopAutoPlayGameBtn.style.display = 'block';
   });
 
   $game.stopAutoPlayGameBtn.addEventListener('click', function(event) {
-    stopAutoPlay(100);
+    $mineSweeperAI.stop();
     $game.autoPlayGameBtn.style.display = "block";
     $game.stopAutoPlayGameBtn.style.display = "none";
   });
@@ -352,7 +352,7 @@ function updateStatistic(bool) {
 
 function gameSuccess() {
   $game.stopTimeCounter();
-  
+  $mineSweeperAI.stop();
   $game.resultTime.innerHTML = $game.currentTimeString();
   $game.autoPlayGameBtn.style.display = "block";
   $game.stopAutoPlayGameBtn.style.display = "none";
@@ -361,6 +361,7 @@ function gameSuccess() {
 
 function gameOver() {
   $game.stopTimeCounter();
+  $mineSweeperAI.stop();
   $game.autoPlayGameBtn.style.display = "block";
   $game.stopAutoPlayGameBtn.style.display = "none";
   loopThroughGrid(function(row, col) {
@@ -381,6 +382,7 @@ function gameOver() {
     }
   });
 }
+
 
 function setGame() {
   $game.sweptUnits = 0;
