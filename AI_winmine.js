@@ -91,6 +91,22 @@ $mineSweeperAI = {
 		clearInterval(this.AIIntervalID);
 	},
 	solveGame: function(){
+		var findResult = $mineSweeperAI.findMineAndSafePos()
+		var findMinePos = findResult.findMinePos;
+		var findSafePos = findResult.findSafePos;
+		// click unitd
+		for(let i=0;i<findMinePos.length;i++){
+			pos = findMinePos[i];
+			unit = $grid.getUnit(pos["row"],pos["col"])
+			$mineSweeperAI.unitClick("flagged",unit);
+		}
+		for(let i=0;i<findSafePos.length;i++){
+			pos = findSafePos[i];
+			unit = $grid.getUnit(pos["row"],pos["col"])
+			$mineSweeperAI.unitClick("trigger",unit);
+		}
+	},
+	findMineAndSafePos:function(){
 		var units = $grid.element.querySelectorAll(".grid-unit");
 		var sweptUnits = document.querySelectorAll(".swept");
 		var findMinePos = [];
@@ -178,16 +194,41 @@ $mineSweeperAI = {
 			}
 		}
 		this.minePairArray = newMinePairArray;
-		// click unitd
-		for(let i=0;i<findMinePos.length;i++){
-			pos = findMinePos[i];
-			unit = $grid.getUnit(pos["row"],pos["col"])
-			$mineSweeperAI.unitClick("flagged",unit);
+		return {
+			findMinePos:findMinePos,
+			findSafePos:findSafePos
 		}
-		for(let i=0;i<findSafePos.length;i++){
-			pos = findSafePos[i];
-			unit = $grid.getUnit(pos["row"],pos["col"])
-			$mineSweeperAI.unitClick("trigger",unit);
+	},
+	/*  hint format
+		return {row:<num>,col:<num>,type: "safe" or "mine"}
+		if not findHint return null 
+	*/
+	getHint:function(){
+		this.minePairArray = [];
+		var findResult = $mineSweeperAI.findMineAndSafePos()
+		var findMinePos = findResult.findMinePos;
+		var findSafePos = findResult.findSafePos;
+		if(findMinePos.length==0 && findSafePos.length==0){
+			var findResult = $mineSweeperAI.findMineAndSafePos()
+			var findMinePos = findResult.findMinePos;
+			var findSafePos = findResult.findSafePos;
+		}
+		if(findMinePos.length!=0){
+			var pos = findMinePos[randomNumber(0,findMinePos.length-1)];
+			return {
+				row:pos["row"],
+				col:pos["col"],
+				type:"mine"
+			}
+		}else if(findSafePos.length==0){
+			var pos = findSafePos[randomNumber(0,findSafePos.length-1)];
+			return {
+				row:pos["row"],
+				col:pos["col"],
+				type:"safe"
+			}	
+		}else{
+			return null;
 		}
 	}
 }
