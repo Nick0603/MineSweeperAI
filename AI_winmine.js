@@ -220,7 +220,7 @@ $mineSweeperAI = {
 				col:pos["col"],
 				type:"mine"
 			}
-		}else if(findSafePos.length==0){
+		}else if(findSafePos.length!=0){
 			var pos = findSafePos[randomNumber(0,findSafePos.length-1)];
 			return {
 				row:pos["row"],
