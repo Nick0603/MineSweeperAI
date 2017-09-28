@@ -198,19 +198,7 @@ function initControlSystem() {
     $game.stopTimeCounter();
   });
 
-  $game.hintBtn.addEventListener('click',function(){
-    var hint = $mineSweeperAI.getHint();
-    if(hint){
-      var unit = $grid.getUnit(hint.row,hint.col);
-      if(hint.type == 'mine'){
-        unit.addClass('hintMine')
-      }else{
-        unit.addClass('hintSafe')
-      }
-    }else{
-      alert("can't find any Hint! ")
-    }
-  });
+  
   
   $game.autoPlayGameBtn.addEventListener('click', function(event) {
     $mineSweeperAI.start(100);

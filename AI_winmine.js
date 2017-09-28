@@ -1,8 +1,8 @@
-$mineSweeperAI = {
+$gameOperate = {
 	unitClick:function(mode,unit){
 		var changeModeBtn = document.getElementById("change-mode")
 		if(mode != "flagged" && mode != "trigger"){
-			throw new UserException('InvalidClickMode');
+			throw 'InvalidClickMode'
 		}
 		if( (mode == "flagged" && changeModeBtn.innerText != "Flag Mode"   ) ||
 			(mode == "trigger" && changeModeBtn.innerText != "Trigger Mode")
@@ -14,22 +14,31 @@ $mineSweeperAI = {
 	randomUnitClick:function(){
 		var enabledUnits = $grid.element.querySelectorAll(".enabled");
 		var unit = enabledUnits[randomNumber(0,enabledUnits.length)];
-		$mineSweeperAI.unitClick("trigger",unit);
+		$gameOperate.unitClick("trigger",unit);
 	},
-	getUnitData:function(unit){
+    getUnitData:function(unit){
 		// format: position-<row>-<col>
 		var idString = unit.id;
 		var row = idString.split("-")[1];
 		var col = idString.split("-")[2];
-		// format: swept-num-<mineCounter>
-		var sweptString = unit.classList[2];
+        // format: swept-num-<mineCounter>
+        var index = 0;
+        for(index=0 ; index<unit.classList.length;index++){
+            if(unit.classList[index].indexOf("swept-num-") != -1){
+                break;
+            }
+        }
+		var sweptString = unit.classList[index];
 		var mineCounter = sweptString.split("-")[2];
 		return {
 			row:parseInt(row),
 			col:parseInt(col),
 			mineCounter:parseInt(mineCounter)
 		}
-	},
+	}
+}
+
+$mineSweeperAI = {
 	Pos:function(row,col){
 		this.row = row;
 		this.col = col;
@@ -79,7 +88,7 @@ $mineSweeperAI = {
 				if(this.lastEnableCount === enableCount){
 					this.failCounter ++;
 					if(this.failCounter >= 3){
-						$mineSweeperAI.randomUnitClick();
+						$gameOperate.randomUnitClick();
 					}
 				}else{
 					this.failCounter = 0;
@@ -98,12 +107,12 @@ $mineSweeperAI = {
 		for(let i=0;i<findMinePos.length;i++){
 			pos = findMinePos[i];
 			unit = $grid.getUnit(pos["row"],pos["col"])
-			$mineSweeperAI.unitClick("flagged",unit);
+			$gameOperate.unitClick("flagged",unit);
 		}
 		for(let i=0;i<findSafePos.length;i++){
 			pos = findSafePos[i];
 			unit = $grid.getUnit(pos["row"],pos["col"])
-			$mineSweeperAI.unitClick("trigger",unit);
+			$gameOperate.unitClick("trigger",unit);
 		}
 	},
 	findMineAndSafePos:function(){
@@ -115,7 +124,7 @@ $mineSweeperAI = {
 	
 		for(let index=0 ; index<sweptUnits.length ; index++){
 			var unit = sweptUnits[index];
-			var unitData = $mineSweeperAI.getUnitData(unit);
+			var unitData = $gameOperate.getUnitData(unit);
 			if(unitData.mineCounter == 0)continue;
 			var flaggedCounter = 0;
 			var enabledCounter = 0;

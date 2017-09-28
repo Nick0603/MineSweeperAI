@@ -108,9 +108,12 @@ div#statistic > div > p#flags-count.too-much-flags:after {
   background-color: #833;
 }
 
-.grid-unit.hintMine{background: red}
-.grid-unit.hintSafe{background: green}
-
+.grid-unit.hintMine{
+  background-color: rgba(254, 59, 59, 0.80)
+}
+.grid-unit.hintSafe{
+  background-color: #259F25
+}
 
 .btn-group {
   position: absolute;
